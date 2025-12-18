@@ -1621,10 +1621,11 @@ export interface EventRegistration {
   user?: any;
 }
 
-export function useEvents(filters?: { type?: string; upcoming?: boolean }) {
+export function useEvents(filters?: { type?: string; upcoming?: boolean; hasRecording?: boolean }) {
   const params = new URLSearchParams();
   if (filters?.type) params.append("type", filters.type);
   if (filters?.upcoming) params.append("upcoming", "true");
+  if (filters?.hasRecording) params.append("hasRecording", "true");
 
   return useQuery<Event[]>({
     queryKey: ["events", filters],

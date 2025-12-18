@@ -187,6 +187,12 @@ function EventCard({
                 >
                   {formatPrice(event.priceCents)}
                 </Badge>
+                {event.vipEarlyAccessHours > 0 && (
+                  <Badge className="text-[10px] h-5 px-1.5 bg-gradient-to-r from-amber-500/20 to-orange-500/20 border-amber-500/30 text-amber-400">
+                    <Sparkles className="w-2.5 h-2.5 mr-0.5" />
+                    VIP
+                  </Badge>
+                )}
               </div>
               {upcoming && !isRegistered && onRegister && (
                 <Button
@@ -213,6 +219,7 @@ export default function Events() {
   const [activeType, setActiveType] = useState<string | undefined>(undefined);
 
   const { data: allEvents, isLoading } = useEvents({ upcoming: true });
+  const { data: recordingEvents, isLoading: recordingsLoading } = useEvents({ hasRecording: true });
   const { data: myRegistrations } = useMyEventRegistrations();
 
   const registerForEvent = useRegisterForEvent();
@@ -299,6 +306,10 @@ export default function Events() {
                 <CalendarCheck className="w-3 h-3 mr-1" />
                 My Events
               </TabsTrigger>
+              <TabsTrigger value="recordings" className="flex-1 text-xs">
+                <Play className="w-3 h-3 mr-1" />
+                Recordings
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="browse" className="space-y-3 pb-6">
@@ -346,6 +357,31 @@ export default function Events() {
                       />
                     )
                 )
+              )}
+            </TabsContent>
+
+            <TabsContent value="recordings" className="space-y-3 pb-6">
+              {recordingsLoading ? (
+                <div className="space-y-3">
+                  {[1, 2, 3].map((i) => (
+                    <Card key={i} className="h-48 bg-deep-pine animate-pulse" />
+                  ))}
+                </div>
+              ) : recordingEvents?.length === 0 ? (
+                <div className="text-center py-12 text-sage/60">
+                  <Play className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                  <p>No recordings available</p>
+                  <p className="text-xs mt-1">Past event recordings will appear here</p>
+                </div>
+              ) : (
+                recordingEvents?.map((event) => (
+                  <EventCard
+                    key={event.id}
+                    event={event}
+                    registration={registrationMap.get(event.id)}
+                    onViewDetails={() => setSelectedEvent(event)}
+                  />
+                ))
               )}
             </TabsContent>
           </Tabs>
@@ -408,23 +444,31 @@ export default function Events() {
                 </div>
 
                 {/* Price */}
-                <div className="flex items-center justify-between bg-birch/10 rounded-lg p-3">
-                  <div className="flex items-center gap-2">
-                    <DollarSign className="w-4 h-4 text-birch" />
-                    <span className="text-sm font-medium text-birch">
-                      {formatPrice(selectedEvent.priceCents)}
-                    </span>
-                    {selectedEvent.vipPriceCents && (
-                      <Badge variant="outline" className="text-[10px] text-sage">
-                        <Sparkles className="w-3 h-3 mr-1" />
-                        VIP: {formatPrice(selectedEvent.vipPriceCents)}
-                      </Badge>
+                <div className="bg-birch/10 rounded-lg p-3 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <DollarSign className="w-4 h-4 text-birch" />
+                      <span className="text-sm font-medium text-birch">
+                        {formatPrice(selectedEvent.priceCents)}
+                      </span>
+                      {selectedEvent.vipPriceCents && (
+                        <Badge variant="outline" className="text-[10px] text-sage">
+                          <Sparkles className="w-3 h-3 mr-1" />
+                          VIP: {formatPrice(selectedEvent.vipPriceCents)}
+                        </Badge>
+                      )}
+                    </div>
+                    {selectedEvent.maxParticipants && (
+                      <div className="flex items-center gap-1 text-sage/60 text-xs">
+                        <Users className="w-3 h-3" />
+                        {selectedEvent.maxParticipants} spots
+                      </div>
                     )}
                   </div>
-                  {selectedEvent.maxParticipants && (
-                    <div className="flex items-center gap-1 text-sage/60 text-xs">
-                      <Users className="w-3 h-3" />
-                      {selectedEvent.maxParticipants} spots
+                  {selectedEvent.vipEarlyAccessHours > 0 && (
+                    <div className="flex items-center gap-2 text-xs text-amber-400 bg-amber-500/10 rounded-md px-2 py-1">
+                      <Sparkles className="w-3 h-3" />
+                      <span>VIP members get {selectedEvent.vipEarlyAccessHours}h early access</span>
                     </div>
                   )}
                 </div>

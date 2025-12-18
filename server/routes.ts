@@ -2283,11 +2283,12 @@ export async function registerRoutes(
   // Get events
   app.get("/api/events", isAuthenticated, async (req, res) => {
     try {
-      const { type, upcoming } = req.query;
+      const { type, upcoming, hasRecording } = req.query;
       const events = await storage.getEvents({
         type: type as string | undefined,
         upcoming: upcoming === "true",
         published: true,
+        hasRecording: hasRecording === "true",
       });
       res.json(events);
     } catch (error) {

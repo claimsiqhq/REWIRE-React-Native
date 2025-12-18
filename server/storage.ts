@@ -354,7 +354,7 @@ export interface IStorage {
   deleteUserGoal(id: string): Promise<void>;
 
   // Events
-  getEvents(filters?: { type?: string; upcoming?: boolean; published?: boolean }): Promise<Event[]>;
+  getEvents(filters?: { type?: string; upcoming?: boolean; published?: boolean; hasRecording?: boolean }): Promise<Event[]>;
   getEvent(id: string): Promise<Event | null>;
   createEvent(data: InsertEvent): Promise<Event>;
   updateEvent(id: string, data: UpdateEvent): Promise<Event>;
@@ -2163,7 +2163,7 @@ export class DatabaseStorage implements IStorage {
 
   // ========== EVENTS ==========
 
-  async getEvents(filters?: { type?: string; upcoming?: boolean; published?: boolean }): Promise<Event[]> {
+  async getEvents(filters?: { type?: string; upcoming?: boolean; published?: boolean; hasRecording?: boolean }): Promise<Event[]> {
     let results = await db.select().from(events).orderBy(events.startTime);
 
     if (!filters) return results;
@@ -2173,6 +2173,7 @@ export class DatabaseStorage implements IStorage {
       if (filters.type && e.eventType !== filters.type) return false;
       if (filters.upcoming && new Date(e.startTime) < now) return false;
       if (filters.published !== undefined && e.isPublished !== filters.published) return false;
+      if (filters.hasRecording && !e.recordingUrl) return false;
       return true;
     });
   }
