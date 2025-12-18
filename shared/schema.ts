@@ -261,7 +261,7 @@ export const microSessions = pgTable("micro_sessions", {
 // App profiles - theme and feature configurations
 export const appProfiles = pgTable("app_profiles", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  name: text("name").notNull(), // e.g., "Grounded Warriors", "Wellness Pro"
+  name: text("name").notNull(), // e.g., "REWIRE with Brian Coones"
   description: text("description"),
   isDefault: boolean("is_default").notNull().default(false), // Default profile for new users
   themeTokens: jsonb("theme_tokens").notNull().default({}), // CSS variable overrides

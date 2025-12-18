@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Heart, Sparkles, Brain, Wind, CheckCircle2, XCircle, Users, User, Mail, UserPlus, TreeDeciduous } from "lucide-react";
-import gwLogo from "@assets/gw-lockup-vertical-512_1765492642920.png";
+import rewireLogo from "/brands/rewire-logo.jpeg";
 import { useLocation } from "wouter";
 
 // Validation helpers
@@ -102,15 +102,15 @@ export default function AuthPage({ pendingInvite }: AuthPageProps) {
                 />
               ) : (
                 <img
-                  src={gwLogo}
-                  alt="Grounded Warriors"
+                  src={rewireLogo}
+                  alt="REWIRE with Brian Coones"
                   className="h-40 w-auto"
                   data-testid="default-logo"
                 />
               )}
             </div>
             <CardTitle className="text-xl text-birch">
-              {brandName ? `Welcome to ${brandName}` : "Welcome, Brother"}
+              {brandName ? `Welcome to ${brandName}` : "Welcome to REWIRE"}
             </CardTitle>
             <CardDescription className="text-sage/80">Sign in or create an account to continue</CardDescription>
           </CardHeader>
