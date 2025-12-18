@@ -63,6 +63,8 @@ export const moods = pgTable("moods", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").notNull().references(() => users.id),
   mood: text("mood").notNull(),
+  energyLevel: integer("energy_level"),
+  stressLevel: integer("stress_level"),
   timestamp: timestamp("timestamp").notNull().defaultNow(),
 });
 
