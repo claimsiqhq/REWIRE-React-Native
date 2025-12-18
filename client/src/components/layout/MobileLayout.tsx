@@ -32,13 +32,13 @@ export default function MobileLayout({ children, fullWidth = false }: MobileLayo
 
   const allRightNavItemsCoach: NavItem[] = [
     { icon: Users, label: "Brothers", path: "/clients", featureFlag: "brotherhood" },
-    { icon: Activity, label: "Metrics", path: "/metrics", featureFlag: "achievements" },
-    { icon: User, label: "Profile", path: "/profile" }, // Always visible
+    { icon: Activity, label: "Metrics", path: "/metrics" },
+    { icon: User, label: "Profile", path: "/profile" },
   ];
 
   const allRightNavItemsClient: NavItem[] = [
-    { icon: Activity, label: "Metrics", path: "/metrics", featureFlag: "achievements" },
-    { icon: User, label: "Profile", path: "/profile" }, // Always visible
+    { icon: Activity, label: "Metrics", path: "/metrics" },
+    { icon: User, label: "Profile", path: "/profile" },
   ];
 
   // Filter nav items based on feature flags
