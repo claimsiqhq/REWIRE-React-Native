@@ -1,6 +1,6 @@
 import MobileLayout from "@/components/layout/MobileLayout";
 import { useDashboardStats, useMoodTrends, useHabitStats, useAllStreaks } from "@/lib/api";
-import { Flame, TrendingUp, BookOpen, CheckCircle2, Smile, Zap, Calendar } from "lucide-react";
+import { Flame, TrendingUp, BookOpen, CheckCircle2, Smile, Zap, Calendar, Heart } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip } from "recharts";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -123,6 +123,127 @@ export default function StatsPage() {
               </p>
             </div>
           </div>
+
+          {/* Weekly Scorecard */}
+          <div className="bg-deep-pine rounded-xl p-4 shadow-sm border border-forest-floor/40" data-testid="card-weekly-scorecard">
+            <div className="flex items-center gap-2 mb-4">
+              <Calendar size={18} className="text-birch" />
+              <h2 className="font-semibold text-birch">Weekly Scorecard</h2>
+            </div>
+            
+            {trendsLoading ? (
+              <div className="grid grid-cols-3 gap-3">
+                {[1, 2, 3].map((i) => (
+                  <Skeleton key={i} className="h-24" />
+                ))}
+              </div>
+            ) : moodTrends && moodTrends.length > 0 ? (
+              <div className="grid grid-cols-3 gap-3">
+                {/* Mood Score */}
+                <div className="bg-forest-floor/30 rounded-xl p-3 text-center">
+                  <Smile size={20} className="text-sage mx-auto mb-1" />
+                  <p className="text-[10px] text-sage/70 uppercase tracking-wider font-medium">Mood</p>
+                  <p className="text-2xl font-bold text-birch" data-testid="scorecard-mood">
+                    {(moodTrends.reduce((sum, m) => sum + m.score, 0) / moodTrends.length).toFixed(1)}
+                  </p>
+                  <p className="text-[10px] text-sage/60">/5</p>
+                </div>
+                
+                {/* Energy Score */}
+                <div className="bg-forest-floor/30 rounded-xl p-3 text-center">
+                  <Zap size={20} className="text-birch mx-auto mb-1" />
+                  <p className="text-[10px] text-sage/70 uppercase tracking-wider font-medium">Energy</p>
+                  <p className="text-2xl font-bold text-birch" data-testid="scorecard-energy">
+                    {(moodTrends.reduce((sum, m) => sum + (m.energyLevel ?? 3), 0) / moodTrends.length).toFixed(1)}
+                  </p>
+                  <p className="text-[10px] text-sage/60">/5</p>
+                </div>
+                
+                {/* Stress Score */}
+                <div className="bg-forest-floor/30 rounded-xl p-3 text-center">
+                  <Heart size={20} className="text-rose-400 mx-auto mb-1" />
+                  <p className="text-[10px] text-sage/70 uppercase tracking-wider font-medium">Stress</p>
+                  <p className="text-2xl font-bold text-birch" data-testid="scorecard-stress">
+                    {(moodTrends.reduce((sum, m) => sum + (m.stressLevel ?? 3), 0) / moodTrends.length).toFixed(1)}
+                  </p>
+                  <p className="text-[10px] text-sage/60">/5</p>
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-6 text-sage/60">
+                <p className="text-sm">Log ground checks to see your weekly scorecard</p>
+              </div>
+            )}
+          </div>
+
+          {/* Energy & Stress Trends Chart */}
+          {moodTrends && moodTrends.length > 0 && (
+            <div className="bg-deep-pine rounded-xl p-4 shadow-sm border border-forest-floor/40" data-testid="card-energy-stress-trends">
+              <div className="flex items-center gap-2 mb-4">
+                <TrendingUp size={18} className="text-birch" />
+                <h2 className="font-semibold text-birch">Energy & Stress (7 days)</h2>
+              </div>
+              <div className="h-40">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={moodTrends}>
+                    <XAxis 
+                      dataKey="date" 
+                      tick={{ fontSize: 10 }} 
+                      tickFormatter={(value) => new Date(value).toLocaleDateString('en-US', { weekday: 'short' })}
+                    />
+                    <YAxis 
+                      domain={[1, 5]} 
+                      ticks={[1, 2, 3, 4, 5]}
+                      tick={{ fontSize: 10 }}
+                    />
+                    <Tooltip 
+                      content={({ active, payload }) => {
+                        if (active && payload && payload.length) {
+                          const data = payload[0].payload;
+                          return (
+                            <div className="bg-deep-pine rounded-lg shadow-lg p-2 border border-forest-floor text-sm">
+                              <p className="text-sage text-xs">
+                                {new Date(data.date).toLocaleDateString()}
+                              </p>
+                              <p className="font-medium text-birch">⚡ Energy: {data.energyLevel ?? '-'}</p>
+                              <p className="font-medium text-rose-400">💗 Stress: {data.stressLevel ?? '-'}</p>
+                            </div>
+                          );
+                        }
+                        return null;
+                      }}
+                    />
+                    <Line 
+                      type="monotone" 
+                      dataKey="energyLevel" 
+                      stroke="#FBFBFB"
+                      strokeWidth={2}
+                      dot={{ fill: "#FBFBFB", strokeWidth: 2, r: 3 }}
+                      name="Energy"
+                    />
+                    <Line 
+                      type="monotone" 
+                      dataKey="stressLevel" 
+                      stroke="#FB7185"
+                      strokeWidth={2}
+                      dot={{ fill: "#FB7185", strokeWidth: 2, r: 3 }}
+                      name="Stress"
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="flex justify-center gap-6 mt-3">
+                <div className="flex items-center gap-1.5">
+                  <div className="w-3 h-3 rounded-full bg-birch" />
+                  <span className="text-[10px] text-sage">Energy</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <div className="w-3 h-3 rounded-full bg-rose-400" />
+                  <span className="text-[10px] text-sage">Stress</span>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Mood Trends Chart */}
           <div className="bg-deep-pine rounded-xl p-4 shadow-sm border border-forest-floor/40" data-testid="card-mood-trends">
