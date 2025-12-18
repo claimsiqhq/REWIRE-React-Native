@@ -271,6 +271,7 @@ function ProfileForm({ profile, onSuccess }: { profile?: AppProfile; onSuccess: 
   const [description, setDescription] = useState(profile?.description || "");
   const [brandName, setBrandName] = useState(profile?.brandName || "");
   const [logoUrl, setLogoUrl] = useState(profile?.logoUrl || "");
+  const [contactEmail, setContactEmail] = useState(profile?.contactEmail || "");
   const [themeTokens, setThemeTokens] = useState<ThemeTokens>(
     (profile?.themeTokens as ThemeTokens) || {
       nightForest: "#1a1f1c",
@@ -292,7 +293,7 @@ function ProfileForm({ profile, onSuccess }: { profile?: AppProfile; onSuccess: 
       const res = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, description, brandName, logoUrl, themeTokens, featureFlags }),
+        body: JSON.stringify({ name, description, brandName, logoUrl, contactEmail, themeTokens, featureFlags }),
       });
       if (!res.ok) throw new Error("Failed to save profile");
       return res.json();
@@ -349,6 +350,18 @@ function ProfileForm({ profile, onSuccess }: { profile?: AppProfile; onSuccess: 
               data-testid="input-logo-url"
             />
           </div>
+        </div>
+        <div className="grid gap-2">
+          <Label htmlFor="contactEmail" className="text-birch">Contact Email</Label>
+          <Input
+            id="contactEmail"
+            type="email"
+            value={contactEmail}
+            onChange={(e) => setContactEmail(e.target.value)}
+            placeholder="Email used for sending emails from this profile"
+            className="bg-night-forest border-forest-floor text-birch"
+            data-testid="input-contact-email"
+          />
         </div>
       </div>
 

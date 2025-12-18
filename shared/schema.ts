@@ -268,6 +268,7 @@ export const appProfiles = pgTable("app_profiles", {
   featureFlags: jsonb("feature_flags").notNull().default({}), // Enabled/disabled features
   logoUrl: text("logo_url"),
   brandName: text("brand_name"),
+  contactEmail: text("contact_email"), // Email used for sending emails from this profile
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
