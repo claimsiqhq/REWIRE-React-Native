@@ -3,7 +3,7 @@ import sgMail from '@sendgrid/mail';
 
 // Initialize SendGrid with API key from environment
 const apiKey = process.env.SENDGRID_API_KEY;
-const fromEmail = process.env.SENDGRID_FROM_EMAIL;
+const defaultFromEmail = process.env.SENDGRID_FROM_EMAIL;
 
 if (apiKey) {
   sgMail.setApiKey(apiKey);
@@ -12,9 +12,10 @@ if (apiKey) {
   console.warn('[SendGrid] SENDGRID_API_KEY not found - email functionality disabled');
 }
 
-function getSendGridClient() {
+function getSendGridClient(profileEmail?: string) {
+  const fromEmail = profileEmail || defaultFromEmail;
   if (!apiKey || !fromEmail) {
-    throw new Error('SendGrid not configured. Please set SENDGRID_API_KEY and SENDGRID_FROM_EMAIL environment variables.');
+    throw new Error('SendGrid not configured. Please set SENDGRID_API_KEY and SENDGRID_FROM_EMAIL environment variables or configure profile email.');
   }
   return {
     client: sgMail,
@@ -34,9 +35,10 @@ function getBaseUrl(): string {
 export async function sendCoachInviteEmail(
   recipientEmail: string,
   coachName: string,
-  inviteCode: string
+  inviteCode: string,
+  profileEmail?: string
 ): Promise<void> {
-  const { client, fromEmail } = getSendGridClient();
+  const { client, fromEmail } = getSendGridClient(profileEmail);
   const baseUrl = getBaseUrl();
   const inviteLink = `${baseUrl}/join/${inviteCode}`;
   
@@ -109,9 +111,10 @@ export async function sendCoachInviteEmail(
 // Send daily check-in reminder email
 export async function sendDailyReminderEmail(
   recipientEmail: string,
-  userName: string
+  userName: string,
+  profileEmail?: string
 ): Promise<void> {
-  const { client, fromEmail } = getSendGridClient();
+  const { client, fromEmail } = getSendGridClient(profileEmail);
   const baseUrl = getBaseUrl();
   
   const msg = {
@@ -179,9 +182,10 @@ export async function sendSessionBookingEmail(
   recipientName: string,
   coachName: string,
   sessionDate: Date,
-  sessionNotes?: string
+  sessionNotes?: string,
+  profileEmail?: string
 ): Promise<void> {
-  const { client, fromEmail } = getSendGridClient();
+  const { client, fromEmail } = getSendGridClient(profileEmail);
   const baseUrl = getBaseUrl();
   
   const formattedDate = sessionDate.toLocaleDateString('en-US', {
@@ -256,9 +260,10 @@ export async function sendSessionBookingEmail(
 export async function sendWelcomeEmail(
   recipientEmail: string,
   userName: string,
-  role: 'client' | 'coach'
+  role: 'client' | 'coach',
+  profileEmail?: string
 ): Promise<void> {
-  const { client, fromEmail } = getSendGridClient();
+  const { client, fromEmail } = getSendGridClient(profileEmail);
   const baseUrl = getBaseUrl();
   
   const roleSpecificContent = role === 'coach' 
