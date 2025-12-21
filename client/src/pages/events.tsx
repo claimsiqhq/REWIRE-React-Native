@@ -38,10 +38,10 @@ import {
   useMyEventRegistrations,
   useRegisterForEvent,
   useCancelEventRegistration,
-  useUser,
   type Event,
   type EventRegistration,
 } from "@/lib/api";
+import { useAuth } from "@/hooks/useAuth";
 
 const eventTypeIcons: Record<string, React.ReactNode> = {
   retreat: <Building2 className="w-5 h-5" />,
@@ -288,7 +288,7 @@ export default function Events() {
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [activeType, setActiveType] = useState<string | undefined>(undefined);
 
-  const { data: user } = useUser();
+  const { user } = useAuth();
   const { data: allEvents, isLoading } = useEvents({ upcoming: true });
   const { data: recordingEvents, isLoading: recordingsLoading } = useEvents({ hasRecording: true });
   const { data: myRegistrations } = useMyEventRegistrations();
