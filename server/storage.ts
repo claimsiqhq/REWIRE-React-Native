@@ -916,23 +916,90 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getCoachContext(userId: string): Promise<{
-    recentMoods: { mood: string; date: string }[];
+    recentMoods: { mood: string; date: string; energyLevel?: number; stressLevel?: number }[];
     recentJournals: { title: string; content: string; mood?: string; date: string }[];
     habits: { label: string; completed: boolean }[];
     currentStreak: number;
+    moodTrends: {
+      avgMood: number;
+      avgEnergy: number;
+      avgStress: number;
+      moodTrend: 'improving' | 'declining' | 'stable';
+      energyTrend: 'improving' | 'declining' | 'stable';
+      stressTrend: 'improving' | 'declining' | 'stable';
+      totalCheckins: number;
+    };
+    habitPatterns: {
+      completionRate: number;
+      strongHabits: string[];
+      strugglingHabits: string[];
+      totalCompleted: number;
+      totalPossible: number;
+    };
+    goals: { goalType: string; isActive: boolean }[];
   }> {
-    const today = new Date().toISOString().split('T')[0];
+    const today = new Date();
+    const todayStr = today.toISOString().split('T')[0];
+    const fourteenDaysAgo = new Date(today);
+    fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
+    const sevenDaysAgo = new Date(today);
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
     
+    // Fetch 14 days of moods with energy/stress
     const recentMoodsData = await db.select().from(moods)
-      .where(eq(moods.userId, userId))
-      .orderBy(desc(moods.timestamp))
-      .limit(7);
+      .where(and(
+        eq(moods.userId, userId),
+        gte(moods.timestamp, fourteenDaysAgo)
+      ))
+      .orderBy(desc(moods.timestamp));
     
     const recentMoods = recentMoodsData.map(m => ({
       mood: m.mood,
-      date: new Date(m.timestamp).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
+      date: new Date(m.timestamp).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }),
+      energyLevel: m.energyLevel ?? undefined,
+      stressLevel: m.stressLevel ?? undefined
     }));
     
+    // Calculate mood trends (compare last 7 days vs previous 7 days)
+    const moodScoreMap: Record<string, number> = { 'great': 5, 'good': 4, 'okay': 3, 'low': 2, 'struggling': 1 };
+    const last7Days = recentMoodsData.filter(m => new Date(m.timestamp) >= sevenDaysAgo);
+    const prev7Days = recentMoodsData.filter(m => new Date(m.timestamp) < sevenDaysAgo);
+    
+    const calcAvg = (items: typeof recentMoodsData, field: 'mood' | 'energyLevel' | 'stressLevel') => {
+      const values = items.map(m => field === 'mood' ? moodScoreMap[m.mood] || 3 : (m[field] ?? 3)).filter(v => v !== undefined);
+      return values.length > 0 ? values.reduce((a, b) => a + b, 0) / values.length : 3;
+    };
+    
+    const getTrend = (current: number, previous: number): 'improving' | 'declining' | 'stable' => {
+      const diff = current - previous;
+      if (Math.abs(diff) < 0.3) return 'stable';
+      return diff > 0 ? 'improving' : 'declining';
+    };
+    
+    const getStressTrend = (current: number, previous: number): 'improving' | 'declining' | 'stable' => {
+      const diff = current - previous;
+      if (Math.abs(diff) < 0.3) return 'stable';
+      return diff < 0 ? 'improving' : 'declining'; // Lower stress = improving
+    };
+    
+    const avgMoodLast7 = calcAvg(last7Days, 'mood');
+    const avgMoodPrev7 = calcAvg(prev7Days, 'mood');
+    const avgEnergyLast7 = calcAvg(last7Days, 'energyLevel');
+    const avgEnergyPrev7 = calcAvg(prev7Days, 'energyLevel');
+    const avgStressLast7 = calcAvg(last7Days, 'stressLevel');
+    const avgStressPrev7 = calcAvg(prev7Days, 'stressLevel');
+    
+    const moodTrends = {
+      avgMood: Math.round(avgMoodLast7 * 10) / 10,
+      avgEnergy: Math.round(avgEnergyLast7 * 10) / 10,
+      avgStress: Math.round(avgStressLast7 * 10) / 10,
+      moodTrend: prev7Days.length > 0 ? getTrend(avgMoodLast7, avgMoodPrev7) : 'stable' as const,
+      energyTrend: prev7Days.length > 0 ? getTrend(avgEnergyLast7, avgEnergyPrev7) : 'stable' as const,
+      stressTrend: prev7Days.length > 0 ? getStressTrend(avgStressLast7, avgStressPrev7) : 'stable' as const,
+      totalCheckins: recentMoodsData.length
+    };
+    
+    // Fetch journals
     const recentJournalsData = await db.select().from(journalEntries)
       .where(eq(journalEntries.userId, userId))
       .orderBy(desc(journalEntries.timestamp))
@@ -945,10 +1012,11 @@ export class DatabaseStorage implements IStorage {
       date: new Date(j.timestamp).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
     }));
     
+    // Today's habits
     const userHabits = await this.getHabitsByUser(userId);
     const habitIds = userHabits.map(h => h.id);
     const completionsToday = habitIds.length > 0 
-      ? await this.getHabitCompletionsForDate(habitIds, today)
+      ? await this.getHabitCompletionsForDate(habitIds, todayStr)
       : [];
     
     const habitsWithStatus = userHabits.map(h => ({
@@ -956,13 +1024,68 @@ export class DatabaseStorage implements IStorage {
       completed: completionsToday.some(c => c.habitId === h.id && c.completed)
     }));
     
+    // Calculate 14-day habit patterns
+    let habitPatterns = {
+      completionRate: 0,
+      strongHabits: [] as string[],
+      strugglingHabits: [] as string[],
+      totalCompleted: 0,
+      totalPossible: 0
+    };
+    
+    if (habitIds.length > 0) {
+      const allCompletions = await db.select().from(habitCompletions)
+        .where(and(
+          inArray(habitCompletions.habitId, habitIds),
+          gte(habitCompletions.date, fourteenDaysAgo.toISOString().split('T')[0])
+        ));
+      
+      const habitCompletionCounts: Record<string, { completed: number; total: number; label: string }> = {};
+      userHabits.forEach(h => {
+        habitCompletionCounts[h.id] = { completed: 0, total: 14, label: h.label };
+      });
+      
+      allCompletions.forEach(c => {
+        if (c.completed && habitCompletionCounts[c.habitId]) {
+          habitCompletionCounts[c.habitId].completed++;
+        }
+      });
+      
+      const totalCompleted = Object.values(habitCompletionCounts).reduce((sum, h) => sum + h.completed, 0);
+      const totalPossible = userHabits.length * 14;
+      
+      habitPatterns = {
+        completionRate: totalPossible > 0 ? Math.round((totalCompleted / totalPossible) * 100) : 0,
+        strongHabits: Object.values(habitCompletionCounts)
+          .filter(h => h.completed >= 10)
+          .map(h => h.label),
+        strugglingHabits: Object.values(habitCompletionCounts)
+          .filter(h => h.completed <= 4)
+          .map(h => h.label),
+        totalCompleted,
+        totalPossible
+      };
+    }
+    
     const habitStats = await this.getHabitStats(userId);
+    
+    // Fetch user goals
+    const userGoalsData = await db.select().from(userGoals)
+      .where(eq(userGoals.userId, userId));
+    
+    const goals = userGoalsData.map(g => ({
+      goalType: g.goalType,
+      isActive: g.isActive
+    }));
     
     return {
       recentMoods,
       recentJournals,
       habits: habitsWithStatus,
-      currentStreak: habitStats.currentStreak
+      currentStreak: habitStats.currentStreak,
+      moodTrends,
+      habitPatterns,
+      goals
     };
   }
 

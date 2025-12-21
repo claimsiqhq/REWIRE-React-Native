@@ -8,10 +8,27 @@ const openai = new OpenAI({
 });
 
 export interface CoachContext {
-  recentMoods: { mood: string; date: string }[];
+  recentMoods: { mood: string; date: string; energyLevel?: number; stressLevel?: number }[];
   recentJournals: { title: string; content: string; mood?: string; date: string }[];
   habits: { label: string; completed: boolean }[];
   currentStreak: number;
+  moodTrends?: {
+    avgMood: number;
+    avgEnergy: number;
+    avgStress: number;
+    moodTrend: 'improving' | 'declining' | 'stable';
+    energyTrend: 'improving' | 'declining' | 'stable';
+    stressTrend: 'improving' | 'declining' | 'stable';
+    totalCheckins: number;
+  };
+  habitPatterns?: {
+    completionRate: number;
+    strongHabits: string[];
+    strugglingHabits: string[];
+    totalCompleted: number;
+    totalPossible: number;
+  };
+  goals?: { goalType: string; isActive: boolean }[];
 }
 
 export interface ChatMessage {
@@ -47,34 +64,93 @@ Remember: You're not a therapist, you're a coach on this path. Suggest professio
 export function buildContextMessage(context: CoachContext): string {
   const parts: string[] = [];
 
-  if (context.recentMoods.length > 0) {
-    const moodSummary = context.recentMoods
-      .slice(0, 5)
-      .map(m => `${m.date}: ${m.mood}`)
-      .join(", ");
-    parts.push(`Recent moods: ${moodSummary}`);
+  // 14-day mood/energy/stress trends (most important for personalization)
+  if (context.moodTrends && context.moodTrends.totalCheckins > 0) {
+    const trendArrow = (trend: string) => trend === 'improving' ? '↑' : trend === 'declining' ? '↓' : '→';
+    const { avgMood, avgEnergy, avgStress, moodTrend, energyTrend, stressTrend, totalCheckins } = context.moodTrends;
+    
+    parts.push(`14-day trends (${totalCheckins} check-ins): Mood ${avgMood}/5 ${trendArrow(moodTrend)}, Energy ${avgEnergy}/5 ${trendArrow(energyTrend)}, Stress ${avgStress}/5 ${trendArrow(stressTrend)}`);
+    
+    // Add specific insights based on trends
+    if (moodTrend === 'declining') {
+      parts.push("Note: Mood has been declining - explore what's weighing on them");
+    } else if (moodTrend === 'improving') {
+      parts.push("Note: Mood is improving - acknowledge their progress");
+    }
+    if (energyTrend === 'declining') {
+      parts.push("Note: Energy has been declining - consider recommending energizing practices");
+    } else if (energyTrend === 'improving') {
+      parts.push("Note: Energy is improving - acknowledge this positive shift");
+    }
+    if (stressTrend === 'improving') {
+      parts.push("Note: Stress levels are improving (going down) - acknowledge this progress");
+    } else if (stressTrend === 'declining') {
+      parts.push("Note: Stress levels are rising - consider recommending calming or grounding practices");
+    }
   }
 
-  if (context.recentJournals.length > 0) {
-    const journalSummary = context.recentJournals
-      .slice(0, 3)
-      .map(j => `"${j.title}" (${j.mood || 'no mood'})`)
-      .join(", ");
-    parts.push(`Recent journal entries: ${journalSummary}`);
+  // User goals for personalization
+  if (context.goals && context.goals.length > 0) {
+    const activeGoals = context.goals.filter(g => g.isActive).map(g => g.goalType.replace(/_/g, ' '));
+    if (activeGoals.length > 0) {
+      parts.push(`Active goals: ${activeGoals.join(", ")}`);
+    }
   }
 
+  // 14-day habit patterns
+  if (context.habitPatterns && context.habitPatterns.totalPossible > 0) {
+    const { completionRate, strongHabits, strugglingHabits } = context.habitPatterns;
+    parts.push(`14-day habit completion: ${completionRate}%`);
+    
+    if (strongHabits.length > 0) {
+      parts.push(`Strong habits: ${strongHabits.join(", ")}`);
+    }
+    if (strugglingHabits.length > 0) {
+      parts.push(`Struggling with: ${strugglingHabits.join(", ")}`);
+    }
+  }
+
+  // Today's habits status
   if (context.habits.length > 0) {
     const completed = context.habits.filter(h => h.completed).length;
     const habitNames = context.habits.map(h => `${h.label} (${h.completed ? '✓' : '○'})`).join(", ");
     parts.push(`Today's habits (${completed}/${context.habits.length}): ${habitNames}`);
   }
 
+  // Current streak
   if (context.currentStreak > 0) {
     parts.push(`Current streak: ${context.currentStreak} days`);
   }
 
+  // Recent moods with energy/stress details (last 3 for recent context)
+  if (context.recentMoods.length > 0) {
+    const moodSummary = context.recentMoods
+      .slice(0, 3)
+      .map(m => {
+        let detail = `${m.date}: ${m.mood}`;
+        if (m.energyLevel !== undefined || m.stressLevel !== undefined) {
+          const extras = [];
+          if (m.energyLevel !== undefined) extras.push(`E:${m.energyLevel}`);
+          if (m.stressLevel !== undefined) extras.push(`S:${m.stressLevel}`);
+          detail += ` (${extras.join(", ")})`;
+        }
+        return detail;
+      })
+      .join("; ");
+    parts.push(`Recent check-ins: ${moodSummary}`);
+  }
+
+  // Recent journal themes
+  if (context.recentJournals.length > 0) {
+    const journalSummary = context.recentJournals
+      .slice(0, 3)
+      .map(j => `"${j.title}" (${j.mood || 'no mood'})`)
+      .join(", ");
+    parts.push(`Recent reflections: ${journalSummary}`);
+  }
+
   if (parts.length === 0) {
-    return "This user is new and hasn't logged any data yet.";
+    return "This user is new and hasn't logged any data yet. Be welcoming and encourage them to start tracking their ground checks and daily anchors.";
   }
 
   return parts.join(". ") + ".";
