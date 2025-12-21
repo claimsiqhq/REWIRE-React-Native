@@ -88,23 +88,23 @@ export default function AuthPage({ pendingInvite }: AuthPageProps) {
   };
 
   return (
-    <div className="min-h-screen flex flex-col lg:flex-row bg-night-forest">
-      <div className="flex-1 flex items-center justify-center p-8">
-        <Card className="w-full max-w-md shadow-xl border-forest-floor bg-deep-pine">
-          <CardHeader className="text-center">
-            <div className="flex flex-col items-center mb-4">
+    <div className="h-screen flex flex-col lg:flex-row bg-night-forest overflow-hidden">
+      <div className="flex-1 flex items-center justify-center p-4 sm:p-8 overflow-y-auto">
+        <Card className="w-full max-w-md shadow-xl border-forest-floor bg-deep-pine my-4 max-h-[calc(100vh-2rem)] flex flex-col">
+          <CardHeader className="text-center pb-2">
+            <div className="flex flex-col items-center mb-2">
               {logoUrl ? (
                 <img
                   src={logoUrl}
                   alt={brandName || "Welcome"}
-                  className="h-40 w-auto object-contain"
+                  className="h-24 sm:h-32 w-auto object-contain"
                   data-testid="brand-logo"
                 />
               ) : (
                 <img
                   src={rewireLogo}
                   alt="REWIRE with Brian Coones"
-                  className="h-40 w-auto"
+                  className="h-24 sm:h-32 w-auto"
                   data-testid="default-logo"
                 />
               )}
@@ -114,7 +114,7 @@ export default function AuthPage({ pendingInvite }: AuthPageProps) {
             </CardTitle>
             <CardDescription className="text-sage/80">Sign in or create an account to continue</CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="overflow-y-auto flex-1">
             {pendingInvite && (
               <div className="mb-4 p-3 bg-sage/10 border border-sage/30 rounded-lg">
                 <p className="text-sm text-sage">
@@ -182,7 +182,7 @@ export default function AuthPage({ pendingInvite }: AuthPageProps) {
               </TabsContent>
               
               <TabsContent value="register">
-                <form onSubmit={handleRegister} className="space-y-4 mt-4">
+                <form onSubmit={handleRegister} className="space-y-3 mt-3 pb-2">
                   <div className="space-y-2">
                     <Label htmlFor="register-email" className="text-birch">Email <span className="text-red-500">*</span></Label>
                     <Input
@@ -263,46 +263,40 @@ export default function AuthPage({ pendingInvite }: AuthPageProps) {
                       </div>
                     )}
                   </div>
-                  <div className="space-y-3">
+                  <div className="space-y-2">
                     <Label className="text-birch">I am joining as a...</Label>
                     <RadioGroup
                       value={registerData.role}
                       onValueChange={(value: "client" | "coach") => setRegisterData({ ...registerData, role: value })}
-                      className="grid grid-cols-2 gap-3"
+                      className="grid grid-cols-2 gap-2"
                       data-testid="radio-role"
                     >
                       <Label
                         htmlFor="role-client"
-                        className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                        className={`flex flex-col items-center gap-1 p-3 rounded-xl border-2 cursor-pointer transition-all ${
                           registerData.role === "client"
                             ? "border-teal bg-teal/10 glow-info"
                             : "border-forest-floor hover:border-teal/50"
                         }`}
                       >
                         <RadioGroupItem value="client" id="role-client" className="sr-only" />
-                        <User className={`w-6 h-6 ${registerData.role === "client" ? "text-teal" : "text-forest-floor"}`} />
-                        <span className={`font-medium ${registerData.role === "client" ? "text-birch" : "text-sage/70"}`}>
+                        <User className={`w-5 h-5 ${registerData.role === "client" ? "text-teal" : "text-forest-floor"}`} />
+                        <span className={`font-medium text-sm ${registerData.role === "client" ? "text-birch" : "text-sage/70"}`}>
                           Warrior
-                        </span>
-                        <span className="text-xs text-center text-sage/60">
-                          Walk the path of healing
                         </span>
                       </Label>
                       <Label
                         htmlFor="role-coach"
-                        className={`flex flex-col items-center gap-2 p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                        className={`flex flex-col items-center gap-1 p-3 rounded-xl border-2 cursor-pointer transition-all ${
                           registerData.role === "coach"
                             ? "border-gold bg-gold/10 glow-gold"
                             : "border-forest-floor hover:border-gold/50"
                         }`}
                       >
                         <RadioGroupItem value="coach" id="role-coach" className="sr-only" />
-                        <Users className={`w-6 h-6 ${registerData.role === "coach" ? "text-gold" : "text-forest-floor"}`} />
-                        <span className={`font-medium ${registerData.role === "coach" ? "text-birch" : "text-sage/70"}`}>
+                        <Users className={`w-5 h-5 ${registerData.role === "coach" ? "text-gold" : "text-forest-floor"}`} />
+                        <span className={`font-medium text-sm ${registerData.role === "coach" ? "text-birch" : "text-sage/70"}`}>
                           Guide
-                        </span>
-                        <span className="text-xs text-center text-sage/60">
-                          Lead others to ground
                         </span>
                       </Label>
                     </RadioGroup>
