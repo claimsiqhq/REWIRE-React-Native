@@ -81,6 +81,31 @@ export default function Profile() {
   const [showEditProfileDialog, setShowEditProfileDialog] = useState(false);
   const [showPrivacyDialog, setShowPrivacyDialog] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  const [isSendingTestEmail, setIsSendingTestEmail] = useState(false);
+
+  const handleSendTestEmail = async () => {
+    setIsSendingTestEmail(true);
+    try {
+      const response = await fetch('/api/email/test', { method: 'POST' });
+      const data = await response.json();
+      if (data.success) {
+        toast({
+          title: "Test email sent!",
+          description: `Email sent to ${data.fromEmail}`,
+        });
+      } else {
+        throw new Error(data.error || 'Failed to send');
+      }
+    } catch (error) {
+      toast({
+        title: "Email failed",
+        description: "Could not send test email. Check SendGrid configuration.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSendingTestEmail(false);
+    }
+  };
   const [editFirstName, setEditFirstName] = useState("");
   const [editLastName, setEditLastName] = useState("");
   const [editProfileImage, setEditProfileImage] = useState<string | null>(null);
@@ -383,27 +408,49 @@ export default function Profile() {
               </Card>
             </div>
 
-            {/* Super Admin Panel Link */}
-            {isSuperAdmin && (
+            {/* Super Admin / Coach Admin Section */}
+            {(isSuperAdmin || isCoach) && (
               <div className="space-y-1">
                 <h3 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider pl-1">Administration</h3>
                 <Card className="border border-forest-floor/40 shadow-sm overflow-hidden bg-deep-pine">
-                  <a
-                    href="/admin"
-                    className="p-3 flex items-center justify-between hover:bg-forest-floor/20 transition-colors cursor-pointer block"
-                    data-testid="link-admin-panel"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="p-1.5 bg-ember/20 text-ember rounded-lg">
-                        <Shield className="w-4 h-4" />
+                  {isSuperAdmin && (
+                    <a
+                      href="/admin"
+                      className="p-3 flex items-center justify-between hover:bg-forest-floor/20 transition-colors cursor-pointer block"
+                      data-testid="link-admin-panel"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="p-1.5 bg-ember/20 text-ember rounded-lg">
+                          <Shield className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <span className="font-medium text-xs block">Admin Panel</span>
+                          <span className="text-[10px] text-muted-foreground">Manage profiles and users</span>
+                        </div>
                       </div>
-                      <div>
-                        <span className="font-medium text-xs block">Admin Panel</span>
-                        <span className="text-[10px] text-muted-foreground">Manage profiles and users</span>
+                      <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                    </a>
+                  )}
+                  <div className={isSuperAdmin ? "border-t border-forest-floor/40" : ""}>
+                    <Button
+                      variant="ghost"
+                      className="w-full p-3 flex items-center justify-between hover:bg-forest-floor/20 transition-colors h-auto"
+                      onClick={handleSendTestEmail}
+                      disabled={isSendingTestEmail}
+                      data-testid="button-test-email"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="p-1.5 bg-sage/20 text-sage rounded-lg">
+                          <Bell className="w-4 h-4" />
+                        </div>
+                        <div className="text-left">
+                          <span className="font-medium text-xs block">Send Test Email</span>
+                          <span className="text-[10px] text-muted-foreground">Verify SendGrid is working</span>
+                        </div>
                       </div>
-                    </div>
-                    <ChevronRight className="w-4 h-4 text-muted-foreground" />
-                  </a>
+                      {isSendingTestEmail ? <Loader2 className="w-4 h-4 animate-spin" /> : <ChevronRight className="w-4 h-4 text-muted-foreground" />}
+                    </Button>
+                  </div>
                 </Card>
               </div>
             )}
