@@ -57,3 +57,13 @@ The application follows a client-server architecture. The frontend is a React ap
 - **Optional Integrations**:
     - Google Calendar (for scheduling)
     - Google Mail (for email interactions)
+
+## Remix/Setup Instructions
+See `README.md` for complete setup instructions. Key steps:
+1. Create PostgreSQL database (auto-configures DATABASE_URL)
+2. Add secrets: `SESSION_SECRET`, `OPENAI_API_KEY`, `SENDGRID_API_KEY`
+3. Add env var: `SENDGRID_FROM_EMAIL`
+4. Run `npm run db:push` to create tables
+5. Register account and run `npx tsx scripts/make-admin.ts your@email.com`
+
+Reference files: `.env.example` for all required environment variables.
