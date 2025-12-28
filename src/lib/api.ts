@@ -537,5 +537,228 @@ export function useUpdateUserProfile() {
   });
 }
 
+// ============================================
+// Favorites
+// ============================================
+
+export interface Favorite {
+  id: string;
+  userId: string;
+  practiceId: string;
+  createdAt: string;
+}
+
+export function useFavorites() {
+  return useQuery<string[]>({
+    queryKey: ["favorites"],
+    queryFn: () => fetchJSON<string[]>("/favorites"),
+  });
+}
+
+export function useToggleFavorite() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (practiceId: string) =>
+      fetchJSON<{ favorited: boolean }>(`/favorites/${practiceId}`, {
+        method: "POST",
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["favorites"] });
+    },
+  });
+}
+
+// ============================================
+// Weekly Metrics
+// ============================================
+
+export interface WeeklyMetrics {
+  avgMood: number | null;
+  avgEnergy: number | null;
+  avgStress: number | null;
+  avgSleepHours: number | null;
+  totalEntries: number;
+}
+
+export function useWeeklyMetrics() {
+  return useQuery<WeeklyMetrics>({
+    queryKey: ["metrics", "weekly"],
+    queryFn: () => fetchJSON<WeeklyMetrics>("/metrics/weekly"),
+  });
+}
+
+// ============================================
+// Milestones
+// ============================================
+
+export interface Milestone {
+  id: string;
+  userId: string;
+  title: string;
+  description: string | null;
+  category: string;
+  unlockedAt: string;
+}
+
+export function useMilestones() {
+  return useQuery<Milestone[]>({
+    queryKey: ["milestones"],
+    queryFn: () => fetchJSON<Milestone[]>("/gamification/milestones"),
+  });
+}
+
+// ============================================
+// Challenge Leaderboard
+// ============================================
+
+export interface LeaderboardEntry {
+  userId: string;
+  firstName: string;
+  lastName: string;
+  profileImageUrl: string | null;
+  currentStreak: number;
+  totalCompletions: number;
+  rank: number;
+}
+
+export function useChallengeLeaderboard(challengeId: string) {
+  return useQuery<LeaderboardEntry[]>({
+    queryKey: ["challenges", challengeId, "leaderboard"],
+    queryFn: () => fetchJSON<LeaderboardEntry[]>(`/challenges/${challengeId}/leaderboard`),
+    enabled: !!challengeId,
+  });
+}
+
+// ============================================
+// Event Registrations & Recordings
+// ============================================
+
+export interface EventRegistration {
+  id: string;
+  userId: string;
+  eventId: string;
+  status: "registered" | "attended" | "cancelled";
+  event?: Event;
+}
+
+export function useMyRegistrations() {
+  return useQuery<(EventRegistration & { event: Event })[]>({
+    queryKey: ["events", "my-registrations"],
+    queryFn: () => fetchJSON<(EventRegistration & { event: Event })[]>("/events/my/registrations"),
+  });
+}
+
+export function useEventRecordings() {
+  return useQuery<Event[]>({
+    queryKey: ["events", "recordings"],
+    queryFn: () => fetchJSON<Event[]>("/events?hasRecording=true"),
+  });
+}
+
+// ============================================
+// Coach Dashboard
+// ============================================
+
+export interface CoachClient {
+  id: string;
+  email: string;
+  firstName: string | null;
+  lastName: string | null;
+  profileImageUrl: string | null;
+  currentStreak: number;
+  totalSessions: number;
+  lastActive: string | null;
+}
+
+export interface CoachInvite {
+  id: string;
+  coachId: string;
+  email: string;
+  status: "pending" | "accepted" | "expired";
+  createdAt: string;
+  expiresAt: string;
+}
+
+export function useCoachClients() {
+  return useQuery<CoachClient[]>({
+    queryKey: ["coach", "clients"],
+    queryFn: () => fetchJSON<CoachClient[]>("/coach/clients"),
+  });
+}
+
+export function useCoachInvites() {
+  return useQuery<CoachInvite[]>({
+    queryKey: ["coach", "invites"],
+    queryFn: () => fetchJSON<CoachInvite[]>("/coach/invites"),
+  });
+}
+
+export function useSendInvite() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (email: string) =>
+      fetchJSON<CoachInvite>("/coach/invites", {
+        method: "POST",
+        body: JSON.stringify({ email }),
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["coach", "invites"] });
+    },
+  });
+}
+
+// ============================================
+// Admin Panel
+// ============================================
+
+export interface AdminStats {
+  totalUsers: number;
+  activeUsers: number;
+  totalCoaches: number;
+  totalPractices: number;
+  totalChallenges: number;
+  totalEvents: number;
+  newUsersToday: number;
+  activeStreaks: number;
+}
+
+export interface AdminUser {
+  id: string;
+  email: string;
+  firstName: string | null;
+  lastName: string | null;
+  role: 'client' | 'coach' | 'superadmin';
+  createdAt: string;
+  lastActive: string | null;
+}
+
+export function useAdminStats() {
+  return useQuery<AdminStats>({
+    queryKey: ["admin", "stats"],
+    queryFn: () => fetchJSON<AdminStats>("/admin/stats"),
+  });
+}
+
+export function useAdminUsers(page = 1, limit = 20) {
+  return useQuery<{ users: AdminUser[]; total: number }>({
+    queryKey: ["admin", "users", page, limit],
+    queryFn: () => fetchJSON<{ users: AdminUser[]; total: number }>(`/admin/users?page=${page}&limit=${limit}`),
+  });
+}
+
+export function useUpdateUserRole() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: { userId: string; role: 'client' | 'coach' | 'superadmin' }) =>
+      fetchJSON<User>(`/admin/users/${data.userId}/role`, {
+        method: "PATCH",
+        body: JSON.stringify({ role: data.role }),
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "users"] });
+    },
+  });
+}
+
 // Export API base for other uses
 export { API_BASE };

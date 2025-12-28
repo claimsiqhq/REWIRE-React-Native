@@ -12,6 +12,8 @@ import ChallengeDetailScreen from '@/screens/ChallengeDetailScreen';
 import EventDetailScreen from '@/screens/EventDetailScreen';
 import JournalEntryScreen from '@/screens/JournalEntryScreen';
 import SettingsScreen from '@/screens/SettingsScreen';
+import CoachDashboardScreen from '@/screens/CoachDashboardScreen';
+import AdminPanelScreen from '@/screens/AdminPanelScreen';
 import { LoadingContainer } from '@/components/ui';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -87,6 +89,26 @@ export function RootNavigator() {
             options={{
               headerShown: true,
               headerTitle: 'Settings',
+              headerStyle: { backgroundColor: colors.background },
+              headerTintColor: colors.foreground,
+            }}
+          />
+          <Stack.Screen
+            name="CoachDashboard"
+            component={CoachDashboardScreen}
+            options={{
+              headerShown: true,
+              headerTitle: 'Coach Dashboard',
+              headerStyle: { backgroundColor: colors.background },
+              headerTintColor: colors.foreground,
+            }}
+          />
+          <Stack.Screen
+            name="AdminPanel"
+            component={AdminPanelScreen}
+            options={{
+              headerShown: true,
+              headerTitle: 'Admin Panel',
               headerStyle: { backgroundColor: colors.background },
               headerTintColor: colors.foreground,
             }}

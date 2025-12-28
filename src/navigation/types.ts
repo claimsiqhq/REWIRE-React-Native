@@ -9,14 +9,20 @@ export type RootStackParamList = {
   EventDetail: { eventId: string };
   JournalEntry: { entryId?: string };
   Settings: undefined;
+  CoachDashboard: undefined;
+  AdminPanel: undefined;
 };
 
 // Main Tab Navigator
 export type MainTabParamList = {
   Home: undefined;
   Focus: { practiceId?: string };
+  Library: undefined;
   Journal: undefined;
   Coach: undefined;
+  Challenges: undefined;
+  Events: undefined;
+  Metrics: undefined;
   Profile: undefined;
 };
 
