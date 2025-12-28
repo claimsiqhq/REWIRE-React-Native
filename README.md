@@ -2,6 +2,50 @@
 
 A men's personal transformation coaching platform focused on mindset development and personal growth.
 
+## Mobile App (Expo React Native)
+
+This project includes a full React Native mobile app built with Expo.
+
+### Mobile Quick Start
+
+```bash
+# Install dependencies
+npm install
+
+# Start Expo development server
+npm start
+
+# Or run on specific platforms
+npm run ios     # iOS Simulator
+npm run android # Android Emulator
+```
+
+### Mobile Project Structure
+
+```
+/App.tsx              # Main app entry point
+/src
+  /components/ui      # Reusable UI components
+  /screens           # Screen components
+  /navigation        # React Navigation setup
+  /hooks             # Custom React hooks
+  /lib               # API client and utilities
+  /theme             # Colors, typography, spacing
+  /types             # TypeScript types
+/assets              # App icons and splash screens
+```
+
+### Mobile Tech Stack
+
+- **Framework**: Expo SDK 52 + React Native 0.76
+- **Navigation**: React Navigation 7
+- **State**: TanStack React Query
+- **Audio**: expo-av
+- **Storage**: expo-secure-store
+- **Haptics**: expo-haptics
+
+---
+
 ## Features
 
 - **Daily Ground Check** - Track your mood, energy, and stress levels with personalized insights

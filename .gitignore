@@ -26,3 +26,22 @@ npm-debug.log*
 
 # Test coverage
 coverage/
+
+# Expo
+.expo/
+.expo-shared/
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.orig.*
+web-build/
+
+# React Native
+*.hprof
+android/app/build/
+ios/Pods/
+
+# Metro
+.metro-health-check*
