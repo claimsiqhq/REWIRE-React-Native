@@ -8,6 +8,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import * as SplashScreen from "expo-splash-screen";
 import { AuthProvider } from "@/src/lib/auth-context";
 import { ThemeProvider } from "@/src/lib/theme-context";
+import { ErrorBoundary } from "@/src/components/error-boundary";
 
 // Prevent splash screen from auto-hiding
 SplashScreen.preventAutoHideAsync();

@@ -17,23 +17,7 @@ import {
   LoadingContainer,
 } from "@/src/components/ui";
 
-interface AdminStats {
-  totalUsers: number;
-  totalCoaches: number;
-  totalClients: number;
-  activeToday: number;
-}
-
-// Mock data for admin stats
-const useAdminStats = (): { data: AdminStats | null; isLoading: boolean } => ({
-  data: {
-    totalUsers: 156,
-    totalCoaches: 12,
-    totalClients: 144,
-    activeToday: 45,
-  },
-  isLoading: false,
-});
+import { useAdminStats, useAdminUsers, useUpdateUserRole } from "@/src/hooks/use-api";
 
 export default function AdminPanelScreen() {
   const { user } = useAuth();
@@ -49,7 +33,8 @@ export default function AdminPanelScreen() {
   };
 
   const handleManageUsers = () => {
-    Alert.alert("Coming Soon", "User management interface coming soon");
+    // TODO: Navigate to user management screen when implemented
+    Alert.alert("User Management", "User management screen coming soon. Use the search to find users.");
   };
 
   const handleManageEvents = () => {

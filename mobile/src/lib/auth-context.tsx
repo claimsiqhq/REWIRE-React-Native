@@ -38,13 +38,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const response = await apiClient.get("/api/user");
         if (response.ok) {
           const userData = await response.json();
-          setUser(userData);
-        } else {
+          if (userData && userData.id) {
+            setUser(userData);
+          } else {
+            // No user data means not authenticated
+            await SecureStore.deleteItemAsync("session_token");
+          }
+        } else if (response.status === 401) {
+          // Unauthorized - clear session
           await SecureStore.deleteItemAsync("session_token");
         }
       }
     } catch (error) {
       console.error("Auth check failed:", error);
+      // On network error, don't clear session - might be offline
     } finally {
       setIsLoading(false);
     }
@@ -57,14 +64,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (response.ok) {
         const userData = await response.json();
         setUser(userData);
-        // Store session token if available in response headers or body
-        await SecureStore.setItemAsync("session_token", "authenticated");
+        // Store session indicator (server uses cookie-based sessions, so cookies are handled automatically)
+        // We store a flag to indicate user is authenticated
+        await SecureStore.setItemAsync("session_token", userData.id?.toString() || "authenticated");
         return { success: true };
       } else {
-        const error = await response.json();
-        return { success: false, error: error.message || "Login failed" };
+        const errorData = await response.json().catch(() => ({ message: "Login failed" }));
+        return { success: false, error: errorData.message || "Invalid username or password" };
       }
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Network error";
+      if (errorMessage.includes("timeout")) {
+        return { success: false, error: "Connection timeout. Please check your internet connection." };
+      }
       return { success: false, error: "Network error. Please try again." };
     }
   };
@@ -80,13 +92,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (response.ok) {
         const userData = await response.json();
         setUser(userData);
-        await SecureStore.setItemAsync("session_token", "authenticated");
+        // Store session indicator (server uses cookie-based sessions)
+        await SecureStore.setItemAsync("session_token", userData.id?.toString() || "authenticated");
         return { success: true };
       } else {
-        const error = await response.json();
-        return { success: false, error: error.message || "Registration failed" };
+        const errorData = await response.json().catch(() => ({ message: "Registration failed" }));
+        return { success: false, error: errorData.message || "Registration failed. Please try again." };
       }
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Network error";
+      if (errorMessage.includes("timeout")) {
+        return { success: false, error: "Connection timeout. Please check your internet connection." };
+      }
       return { success: false, error: "Network error. Please try again." };
     }
   };

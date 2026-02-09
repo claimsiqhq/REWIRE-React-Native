@@ -643,3 +643,184 @@ export function useQuickAction() {
     },
   });
 }
+
+// ============ USER PROFILE ============
+
+export function useUpdateUserProfile() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: {
+      firstName?: string;
+      lastName?: string;
+      profileImageUrl?: string;
+      email?: string;
+    }) => {
+      const response = await apiClient.patch("/api/user/profile", data);
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ error: "Failed to update profile" }));
+        throw new Error(error.error || "Failed to update profile");
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["user"] });
+      queryClient.invalidateQueries({ queryKey: ["api", "user"] });
+    },
+  });
+}
+
+// ============ COACH ============
+
+export interface CoachClient {
+  id: string;
+  username: string;
+  email?: string;
+  firstName?: string;
+  lastName?: string;
+  role: string;
+  createdAt: string;
+}
+
+export function useCoachClients() {
+  return useQuery({
+    queryKey: ["coach", "clients"],
+    queryFn: async () => {
+      const response = await apiClient.get("/api/coach/clients");
+      if (!response.ok) throw new Error("Failed to fetch clients");
+      return response.json() as Promise<CoachClient[]>;
+    },
+  });
+}
+
+export interface CoachInvite {
+  id: string;
+  coachId: string;
+  code: string;
+  inviteeEmail?: string;
+  inviteeName?: string;
+  status: "pending" | "accepted" | "expired";
+  expiresAt?: string;
+  createdAt: string;
+}
+
+export function useCoachInvites() {
+  return useQuery({
+    queryKey: ["coach", "invites"],
+    queryFn: async () => {
+      const response = await apiClient.get("/api/coach/invites");
+      if (!response.ok) throw new Error("Failed to fetch invites");
+      return response.json() as Promise<CoachInvite[]>;
+    },
+  });
+}
+
+export function useCreateCoachInvite() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: { email?: string; name?: string }) => {
+      const response = await apiClient.post("/api/coach/invite", data);
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ error: "Failed to create invite" }));
+        throw new Error(error.error || "Failed to create invite");
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["coach", "invites"] });
+    },
+  });
+}
+
+export function useUnreadNotificationCount() {
+  return useQuery({
+    queryKey: ["coach", "notifications", "unread-count"],
+    queryFn: async () => {
+      const response = await apiClient.get("/api/coach/notifications/unread-count");
+      if (!response.ok) throw new Error("Failed to fetch notification count");
+      return response.json() as Promise<{ count: number }>;
+    },
+  });
+}
+
+export function useChallengeLeaderboard(challengeId: string) {
+  return useQuery({
+    queryKey: ["challenges", challengeId, "leaderboard"],
+    queryFn: async () => {
+      const response = await apiClient.get(`/api/challenges/${challengeId}/leaderboard`);
+      if (!response.ok) throw new Error("Failed to fetch leaderboard");
+      return response.json();
+    },
+    enabled: !!challengeId,
+  });
+}
+
+// ============ ADMIN ============
+
+export interface AdminStats {
+  totalUsers: number;
+  totalCoaches: number;
+  totalClients: number;
+  activeToday: number;
+}
+
+export function useAdminStats() {
+  return useQuery({
+    queryKey: ["admin", "stats"],
+    queryFn: async () => {
+      // Note: This endpoint may need to be created on the backend
+      // For now, we'll calculate from users endpoint
+      const response = await apiClient.get("/api/admin/users");
+      if (!response.ok) throw new Error("Failed to fetch admin stats");
+      const users = await response.json();
+      
+      // Calculate stats from users array
+      const stats: AdminStats = {
+        totalUsers: users.length || 0,
+        totalCoaches: users.filter((u: any) => u.role === "coach" || u.role === "admin").length || 0,
+        totalClients: users.filter((u: any) => u.role === "client").length || 0,
+        activeToday: 0, // Would need separate endpoint for this
+      };
+      
+      return stats;
+    },
+  });
+}
+
+export interface AdminUser {
+  id: string;
+  username: string;
+  email?: string;
+  firstName?: string;
+  lastName?: string;
+  role: "client" | "coach" | "admin" | "superadmin";
+  createdAt: string;
+}
+
+export function useAdminUsers() {
+  return useQuery({
+    queryKey: ["admin", "users"],
+    queryFn: async () => {
+      const response = await apiClient.get("/api/admin/users");
+      if (!response.ok) throw new Error("Failed to fetch users");
+      return response.json() as Promise<AdminUser[]>;
+    },
+  });
+}
+
+export function useUpdateUserRole() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ userId, role }: { userId: string; role: "client" | "coach" | "admin" | "superadmin" }) => {
+      const response = await apiClient.patch(`/api/admin/users/${userId}/role`, { role });
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ error: "Failed to update role" }));
+        throw new Error(error.error || "Failed to update role");
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "users"] });
+      queryClient.invalidateQueries({ queryKey: ["admin", "stats"] });
+    },
+  });
+}

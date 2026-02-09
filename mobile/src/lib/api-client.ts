@@ -1,7 +1,25 @@
 import Constants from "expo-constants";
 
 // API Base URL - configure for your environment
-const API_BASE_URL = Constants.expoConfig?.extra?.apiUrl || "https://your-api-url.com";
+// Priority: 1. Environment variable, 2. app.json extra.apiUrl, 3. Default
+const getApiUrl = () => {
+  // Check for environment variable first (for Expo)
+  if (typeof process !== "undefined" && process.env?.EXPO_PUBLIC_API_URL) {
+    return process.env.EXPO_PUBLIC_API_URL;
+  }
+  // Check app.json extra config
+  if (Constants.expoConfig?.extra?.apiUrl) {
+    return Constants.expoConfig.extra.apiUrl;
+  }
+  // Default to localhost for development
+  if (__DEV__) {
+    return "http://localhost:3000";
+  }
+  // Production fallback
+  return "https://your-api-url.com";
+};
+
+const API_BASE_URL = getApiUrl();
 
 interface RequestOptions extends RequestInit {
   timeout?: number;
@@ -27,14 +45,29 @@ class ApiClient {
           "Content-Type": "application/json",
           ...fetchOptions.headers,
         },
-        credentials: "include",
+        credentials: "include", // Important for cookie-based sessions
         signal: controller.signal,
       });
 
       clearTimeout(timeoutId);
+      
+      // Handle authentication errors
+      if (response.status === 401) {
+        // Clear stored auth state on 401
+        try {
+          const { SecureStore } = require("expo-secure-store");
+          await SecureStore.deleteItemAsync("session_token");
+        } catch (e) {
+          // Ignore errors clearing storage
+        }
+      }
+      
       return response;
     } catch (error) {
       clearTimeout(timeoutId);
+      if (error instanceof Error && error.name === "AbortError") {
+        throw new Error("Request timeout. Please check your connection.");
+      }
       throw error;
     }
   }

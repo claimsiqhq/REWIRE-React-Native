@@ -21,26 +21,12 @@ import {
   LoadingContainer,
 } from "@/src/components/ui";
 
-// Mock hooks for coach functionality - would need to add to api.ts
-const useCoachClients = () => ({
-  data: [] as any[],
-  isLoading: false,
-  refetch: async () => {},
-});
-
-const useCreateCoachInvite = () => ({
-  mutate: async (data: any) => {},
-  isPending: false,
-});
-
-const useCoachInvites = () => ({
-  data: [] as any[],
-  isLoading: false,
-});
-
-const useUnreadNotificationCount = () => ({
-  data: { count: 0 },
-});
+import {
+  useCoachClients,
+  useCoachInvites,
+  useCreateCoachInvite,
+  useUnreadNotificationCount,
+} from "@/src/hooks/use-api";
 
 export default function CoachDashboardScreen() {
   const { user } = useAuth();
