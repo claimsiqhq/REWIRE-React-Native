@@ -77,6 +77,24 @@ export default function TabLayout() {
           ),
         }}
       />
+      <Tabs.Screen
+        name="challenges"
+        options={{
+          title: "Challenges",
+          tabBarIcon: ({ color, size }) => (
+            <Feather name="award" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="events"
+        options={{
+          title: "Events",
+          tabBarIcon: ({ color, size }) => (
+            <Feather name="calendar" size={size} color={color} />
+          ),
+        }}
+      />
     </Tabs>
   );
 }
