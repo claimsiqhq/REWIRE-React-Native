@@ -53,8 +53,7 @@
       "router": {},
       "eas": {
         "projectId": "9cc25e77-1ea7-43a2-ad1f-57d0aeff8bd7"
-      },
-      "apiUrl": process.env.EXPO_PUBLIC_API_URL || "http://localhost:3000"
+      }
     },
     "owner": "claimsiq"
   }
