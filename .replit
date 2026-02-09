@@ -50,3 +50,4 @@ integrations = ["javascript_openai_ai_integrations:1.0.0", "google-calendar:1.0.
 
 [userenv.shared]
 SENDGRID_FROM_EMAIL = "info@neurovista.ai"
+EXPO_PUBLIC_API_URL = "https://43330b6b-e373-4342-97b1-8664c5452751-00-oc4ejr1j8g4u.picard.replit.dev"
