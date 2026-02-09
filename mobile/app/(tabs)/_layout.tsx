@@ -104,6 +104,24 @@ export default function TabLayout() {
           ),
         }}
       />
+      <Tabs.Screen
+        name="library"
+        options={{
+          title: "Library",
+          tabBarIcon: ({ color, size }) => (
+            <Feather name="book" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="focus"
+        options={{
+          title: "Focus",
+          tabBarIcon: ({ color, size }) => (
+            <Feather name="wind" size={size} color={color} />
+          ),
+        }}
+      />
     </Tabs>
   );
 }

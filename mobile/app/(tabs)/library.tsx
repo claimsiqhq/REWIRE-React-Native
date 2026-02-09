@@ -4,7 +4,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
-import { usePractices, useFavorites, useToggleFavorite, type Practice } from "@/src/hooks/use-api";
+import { usePractices, usePracticeFavorites, useTogglePracticeFavorite, type Practice } from "@/src/hooks/use-api";
 import { colors, spacing } from "@/src/theme";
 import { Text, H1, PressableCard, Badge, LoadingContainer } from "@/src/components/ui";
 
@@ -44,8 +44,8 @@ export default function LibraryScreen() {
   };
 
   const { data: practices, isLoading, refetch } = usePractices(filters);
-  const { data: favorites } = useFavorites();
-  const toggleFavorite = useToggleFavorite();
+  const { data: favorites } = usePracticeFavorites();
+  const toggleFavorite = useTogglePracticeFavorite();
 
   const onRefresh = useCallback(async () => {
     setIsRefreshing(true);
@@ -61,11 +61,11 @@ export default function LibraryScreen() {
   const handleFavoriteToggle = async (practiceId: string, e: any) => {
     e.stopPropagation();
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    toggleFavorite.mutate(practiceId);
+    toggleFavorite.mutate(Number(practiceId));
   };
 
   const isFavorited = (practiceId: string) => {
-    return favorites?.some((f) => f.practiceId === practiceId) ?? false;
+    return favorites?.some((f) => f.practiceId === Number(practiceId)) ?? false;
   };
 
   const formatDuration = (seconds: number) => {
@@ -173,7 +173,7 @@ export default function LibraryScreen() {
                   </View>
                   <TouchableOpacity onPress={(e) => handleFavoriteToggle(practice.id, e)}>
                     <Feather
-                      name={isFavorited(practice.id) ? "heart" : "heart"}
+                      name="heart"
                       size={22}
                       color={isFavorited(practice.id) ? colors.coral : colors.mutedForeground}
                       fill={isFavorited(practice.id) ? colors.coral : "none"}
