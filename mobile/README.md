@@ -1,96 +1,132 @@
 # REWIRE Mobile App
 
-React Native (Expo) mobile application for the REWIRE personal transformation coaching platform.
-
-## Prerequisites
-
-- Node.js 18+
-- npm or yarn
-- Expo CLI (`npm install -g expo-cli`)
-- iOS Simulator (macOS) or Android Emulator
+A React Native mobile application built with Expo Router and NativeWind.
 
 ## Getting Started
 
+### Prerequisites
+
+- Node.js (v18 or higher)
+- npm or yarn
+- Expo CLI (`npm install -g expo-cli`)
+- iOS Simulator (for Mac) or Android Studio (for Android development)
+
+### Installation
+
 1. Install dependencies:
-   ```bash
-   cd mobile
-   npm install
-   ```
+```bash
+npm install
+```
 
-2. Copy environment file and configure:
-   ```bash
-   cp .env.example .env
-   # Edit .env with your API URL
-   ```
+2. Start the development server:
+```bash
+npm start
+# or
+expo start
+```
 
-3. Add app icons:
-   - Place your icon files in `assets/images/`:
-     - `icon.png` (1024x1024)
-     - `splash-icon.png` (512x512)
-     - `adaptive-icon.png` (1024x1024)
-     - `favicon.png` (48x48)
-
-4. Start the development server:
-   ```bash
-   npm start
-   ```
-
-5. Run on device/simulator:
-   - Press `i` for iOS Simulator
-   - Press `a` for Android Emulator
-   - Scan QR code with Expo Go app for physical device
+3. Run on a specific platform:
+```bash
+npm run android  # Android
+npm run ios       # iOS
+npm run web       # Web (for testing)
+```
 
 ## Project Structure
 
 ```
 mobile/
-├── app/                    # Expo Router screens
-│   ├── (auth)/            # Authentication screens
-│   ├── (tabs)/            # Main tab screens
-│   ├── _layout.tsx        # Root layout
-│   └── index.tsx          # Entry redirect
+├── app/                 # Expo Router app directory
+│   ├── (auth)/          # Authentication routes
+│   ├── (tabs)/          # Main tab navigation
+│   └── _layout.tsx      # Root layout
 ├── src/
-│   ├── components/        # Reusable components
-│   ├── hooks/             # Custom React hooks
-│   └── lib/               # Utilities and contexts
-├── assets/                # Images, fonts, etc.
-├── app.json              # Expo configuration
-├── tailwind.config.js    # NativeWind configuration
-└── package.json
+│   ├── components/      # Reusable components
+│   ├── hooks/           # Custom React hooks
+│   └── lib/             # Utilities and contexts
+├── assets/              # Images and static assets
+├── app.json            # Expo configuration
+├── babel.config.js     # Babel configuration
+└── metro.config.js     # Metro bundler configuration
 ```
-
-## Tech Stack
-
-- **Framework**: React Native with Expo SDK 52
-- **Navigation**: Expo Router (file-based)
-- **Styling**: NativeWind (Tailwind CSS for RN)
-- **State Management**: React Query + React Context
-- **Forms**: React Hook Form
-- **Icons**: @expo/vector-icons (Feather)
 
 ## Features
 
-- Mood tracking with energy/stress levels
-- Habit tracking with streaks
-- Journaling with prompts
-- Breathing & meditation practices
-- Gamification (XP, levels, streaks)
-- AI coaching integration
-- Dark mode UI
+- **Expo Router**: File-based routing system
+- **NativeWind**: Tailwind CSS for React Native
+- **React Query**: Data fetching and caching
+- **Expo Secure Store**: Secure token storage
+- **TypeScript**: Type-safe development
+
+## Configuration
+
+### API Configuration
+
+The app uses `expo-constants` for API configuration. Set your API URL in `app.json`:
+
+```json
+{
+  "expo": {
+    "extra": {
+      "apiUrl": "https://your-api-url.com"
+    }
+  }
+}
+```
+
+Or use environment variables (create a `.env` file):
+
+```
+EXPO_PUBLIC_API_URL=https://your-api-url.com
+```
+
+### Assets
+
+Add the following assets to `assets/images/`:
+- `icon.png` (1024x1024) - App icon
+- `splash-icon.png` (1242x2436) - Splash screen image
+- `adaptive-icon.png` (1024x1024) - Android adaptive icon
+- `favicon.png` (48x48) - Web favicon
 
 ## Building for Production
 
-```bash
-# Build for iOS
-eas build --platform ios
+### Android
 
-# Build for Android
+```bash
+npm run build:android
+# or
 eas build --platform android
 ```
 
-## Contributing
+### iOS
 
-1. Create a feature branch
-2. Make your changes
-3. Test on both iOS and Android
-4. Submit a pull request
+```bash
+npm run build:ios
+# or
+eas build --platform ios
+```
+
+## Development Notes
+
+- The app uses Expo Router for navigation (file-based routing)
+- NativeWind is configured for styling with Tailwind CSS classes
+- All API calls go through `src/lib/api-client.ts`
+- Authentication state is managed via `src/lib/auth-context.tsx`
+
+## Troubleshooting
+
+### Metro bundler cache issues
+```bash
+expo start --clear
+```
+
+### Reset Expo cache
+```bash
+expo start -c
+```
+
+### Clear node_modules and reinstall
+```bash
+rm -rf node_modules
+npm install
+```
