@@ -548,6 +548,11 @@ export function useRegisterForEvent() {
 }
 
 // ============ AI CONVERSATIONS ============
+export interface ChatMessage {
+  role: "user" | "assistant";
+  content: string;
+}
+
 export function useAIConversations() {
   return useQuery({
     queryKey: ["ai-conversations"],
@@ -569,6 +574,30 @@ export function useSendAIMessage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["ai-conversations"] });
+    },
+  });
+}
+
+export function useCoachChat() {
+  return useMutation({
+    mutationFn: async (data: { message: string; conversationHistory: ChatMessage[] }) => {
+      const response = await apiClient.post("/api/coach/chat", data);
+      if (!response.ok) throw new Error("Failed to send chat message");
+      return response.json();
+    },
+  });
+}
+
+export function useQuickAction() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: { actionType: "regulate" | "reframe" | "reset"; currentState?: string }) => {
+      const response = await apiClient.post("/api/coach/quick-action", data);
+      if (!response.ok) throw new Error("Failed to perform quick action");
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["ai", "conversations"] });
     },
   });
 }

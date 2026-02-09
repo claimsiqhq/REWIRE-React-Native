@@ -95,6 +95,15 @@ export default function TabLayout() {
           ),
         }}
       />
+      <Tabs.Screen
+        name="coach"
+        options={{
+          title: "Coach",
+          tabBarIcon: ({ color, size }) => (
+            <Feather name="message-circle" size={size} color={color} />
+          ),
+        }}
+      />
     </Tabs>
   );
 }
