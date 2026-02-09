@@ -4,6 +4,9 @@
     "appVersionSource": "remote"
   },
   "build": {
+    "base": {
+      "workingDirectory": "mobile"
+    },
     "development": {
       "developmentClient": true,
       "distribution": "internal",
