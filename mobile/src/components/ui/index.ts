@@ -31,3 +31,6 @@ export { Slider, type SliderProps } from './Slider';
 export { Badge, type BadgeProps } from './Badge';
 export { Spinner, LoadingOverlay, LoadingContainer } from './Spinner';
 export { Separator, type SeparatorProps } from './Separator';
+
+// Error Boundary
+export { ErrorBoundary } from '../error-boundary';
