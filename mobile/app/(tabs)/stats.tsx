@@ -16,7 +16,7 @@ import {
 import { format, subDays, startOfWeek } from "date-fns";
 import * as Haptics from "expo-haptics";
 import { colors, spacing } from "@/src/theme";
-import { Card, Button, Slider, TextArea, H3, Text } from "@/src/components/ui";
+import { Card, Button, Slider, TextArea, H3 } from "@/src/components/ui";
 
 const screenWidth = Dimensions.get("window").width;
 
