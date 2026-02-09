@@ -8,7 +8,7 @@ import {
   ViewStyle,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, spacing, borderRadius, layout, typography } from '@/theme';
+import { colors, spacing, borderRadius, layout, typography } from '@/src/theme';
 import { Text } from './Text';
 
 export interface InputProps extends TextInputProps {

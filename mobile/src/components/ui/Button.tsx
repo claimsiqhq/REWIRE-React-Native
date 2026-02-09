@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { Text } from './Text';
-import { colors, spacing, borderRadius, layout, shadows } from '@/theme';
+import { colors, spacing, borderRadius, layout, shadows } from '@/src/theme';
 
 type ButtonVariant = 'default' | 'secondary' | 'outline' | 'ghost' | 'destructive' | 'success';
 type ButtonSize = 'sm' | 'md' | 'lg';

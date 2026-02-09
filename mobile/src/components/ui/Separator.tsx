@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, StyleSheet, ViewStyle } from 'react-native';
-import { colors, spacing } from '@/theme';
+import { colors, spacing } from '@/src/theme';
 
 export interface SeparatorProps {
   orientation?: 'horizontal' | 'vertical';

@@ -2,7 +2,7 @@ import React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import { colors, spacing, borderRadius } from '@/theme';
+import { colors, spacing, borderRadius } from '@/src/theme';
 import { Text } from './Text';
 
 export interface CheckboxProps {

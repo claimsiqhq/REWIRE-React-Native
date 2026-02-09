@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, PanResponder, LayoutChangeEvent } from 'react-native';
 import * as Haptics from 'expo-haptics';
-import { colors, borderRadius, spacing } from '@/theme';
+import { colors, borderRadius, spacing } from '@/src/theme';
 import { Text } from './Text';
 
 export interface SliderProps {
