@@ -72,14 +72,29 @@ app.use((req, res, next) => {
     throw err;
   });
 
-  // importantly only setup vite in development and after
-  // setting up all the other routes so the catch-all route
-  // doesn't interfere with the other routes
+  // In production, serve static web client if available
+  // In development, set up Vite for the web client if available
+  // For mobile-only mode, skip web client serving entirely
   if (process.env.NODE_ENV === "production") {
-    serveStatic(app);
+    try {
+      serveStatic(app);
+    } catch (e) {
+      log("No web client build found - running as API-only server");
+    }
+  } else if (process.env.API_ONLY !== "true") {
+    try {
+      const { setupVite } = await import("./vite");
+      await setupVite(httpServer, app);
+    } catch (e) {
+      log("Vite setup skipped - running as API-only server for mobile app");
+      app.get("/", (_req, res) => {
+        res.json({ status: "ok", message: "REWIRE API Server", mode: "api-only" });
+      });
+    }
   } else {
-    const { setupVite } = await import("./vite");
-    await setupVite(httpServer, app);
+    app.get("/", (_req, res) => {
+      res.json({ status: "ok", message: "REWIRE API Server", mode: "api-only" });
+    });
   }
 
   // ALWAYS serve the app on the port specified in the environment variable PORT
