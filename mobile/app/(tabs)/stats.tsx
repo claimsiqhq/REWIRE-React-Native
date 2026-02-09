@@ -2,18 +2,46 @@ import { useState, useCallback } from "react";
 import { View, Text, ScrollView, RefreshControl, Dimensions } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
-import { useMoods, useHabits, useHabitCompletions, useGamification } from "@/src/hooks/use-api";
-import { format, subDays, startOfWeek, endOfWeek } from "date-fns";
+import {
+  useMoods,
+  useHabits,
+  useHabitCompletions,
+  useGamification,
+  useTodayMetrics,
+  useSaveMetrics,
+  useWeeklyMetrics,
+  useDashboardStats,
+  useMilestones,
+} from "@/src/hooks/use-api";
+import { format, subDays, startOfWeek } from "date-fns";
+import * as Haptics from "expo-haptics";
+import { colors, spacing } from "@/src/theme";
+import { Card, Button, Slider, TextArea, H3 } from "@/src/components/ui";
 
 const screenWidth = Dimensions.get("window").width;
 
+const MOOD_LABELS = ["", "Rough", "Low", "Okay", "Good", "Great", "Amazing"];
+const ENERGY_LABELS = ["", "Exhausted", "Tired", "Moderate", "Energized", "High", "Peak"];
+const STRESS_LABELS = ["", "Minimal", "Low", "Moderate", "Elevated", "High", "Extreme"];
+
 export default function StatsScreen() {
   const [refreshing, setRefreshing] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [moodScore, setMoodScore] = useState(3);
+  const [energyScore, setEnergyScore] = useState(3);
+  const [stressScore, setStressScore] = useState(3);
+  const [sleepHours, setSleepHours] = useState(7);
+  const [notes, setNotes] = useState("");
 
   const { data: moods, refetch: refetchMoods } = useMoods();
   const { data: habits, refetch: refetchHabits } = useHabits();
   const { data: completions, refetch: refetchCompletions } = useHabitCompletions();
   const { data: gamification, refetch: refetchGamification } = useGamification();
+  const { data: todayMetrics, isLoading, refetch: refetchMetrics } = useTodayMetrics();
+  const { data: weeklyAvg } = useWeeklyMetrics();
+  const { data: stats } = useDashboardStats();
+  const { data: milestones } = useMilestones();
+  const saveMetrics = useSaveMetrics();
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -22,9 +50,41 @@ export default function StatsScreen() {
       refetchHabits(),
       refetchCompletions(),
       refetchGamification(),
+      refetchMetrics(),
     ]);
     setRefreshing(false);
-  }, [refetchMoods, refetchHabits, refetchCompletions, refetchGamification]);
+  }, [refetchMoods, refetchHabits, refetchCompletions, refetchGamification, refetchMetrics]);
+
+  const handleStartLogging = () => {
+    if (todayMetrics) {
+      setMoodScore(todayMetrics.moodScore || 3);
+      setEnergyScore(todayMetrics.energyScore || 3);
+      setStressScore(todayMetrics.stressScore || 3);
+      setSleepHours(todayMetrics.sleepHours || 7);
+      setNotes(todayMetrics.notes || "");
+    }
+    setIsEditing(true);
+  };
+
+  const handleSave = async () => {
+    await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    saveMetrics.mutate({
+      moodScore,
+      energyScore,
+      stressScore,
+      sleepHours,
+      notes: notes.trim() || undefined,
+    });
+    setIsEditing(false);
+  };
+
+  const getMoodColor = (score: number) => {
+    if (score >= 5) return colors.moodAmazing;
+    if (score >= 4) return colors.moodGreat;
+    if (score >= 3) return colors.moodGood;
+    if (score >= 2) return colors.moodOkay;
+    return colors.moodRough;
+  };
 
   // Calculate stats
   const currentStreak = gamification?.currentStreak || 0;
@@ -76,11 +136,245 @@ export default function StatsScreen() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            tintColor="#4A7C59"
+            tintColor={colors.accent}
           />
         }
       >
-        {/* Level & XP Card */}
+        {isEditing ? (
+          // Editing Mode
+          <View className="px-5 mb-6">
+            <Card className="p-5">
+              <H3 className="mb-4">Log Today's Metrics</H3>
+
+              {/* Mood */}
+              <View className="mb-6">
+                <View className="flex-row justify-between items-center mb-2">
+                  <Text variant="labelLarge" color="foreground">
+                    Mood
+                  </Text>
+                  <Text variant="body" style={{ color: getMoodColor(moodScore) }}>
+                    {MOOD_LABELS[moodScore]}
+                  </Text>
+                </View>
+                <Slider
+                  value={moodScore}
+                  onValueChange={setMoodScore}
+                  min={1}
+                  max={6}
+                  step={1}
+                  showValue={false}
+                />
+              </View>
+
+              {/* Energy */}
+              <View className="mb-6">
+                <View className="flex-row justify-between items-center mb-2">
+                  <Text variant="labelLarge" color="foreground">
+                    Energy
+                  </Text>
+                  <Text variant="body" color="accent">
+                    {ENERGY_LABELS[energyScore]}
+                  </Text>
+                </View>
+                <Slider
+                  value={energyScore}
+                  onValueChange={setEnergyScore}
+                  min={1}
+                  max={6}
+                  step={1}
+                  showValue={false}
+                />
+              </View>
+
+              {/* Stress */}
+              <View className="mb-6">
+                <View className="flex-row justify-between items-center mb-2">
+                  <Text variant="labelLarge" color="foreground">
+                    Stress Level
+                  </Text>
+                  <Text variant="body" color="warning">
+                    {STRESS_LABELS[stressScore]}
+                  </Text>
+                </View>
+                <Slider
+                  value={stressScore}
+                  onValueChange={setStressScore}
+                  min={1}
+                  max={6}
+                  step={1}
+                  showValue={false}
+                />
+              </View>
+
+              {/* Sleep */}
+              <View className="mb-6">
+                <View className="flex-row justify-between items-center mb-2">
+                  <Text variant="labelLarge" color="foreground">
+                    Sleep
+                  </Text>
+                  <Text variant="body" color="violet">
+                    {sleepHours} hours
+                  </Text>
+                </View>
+                <Slider
+                  value={sleepHours}
+                  onValueChange={setSleepHours}
+                  min={3}
+                  max={12}
+                  step={0.5}
+                  showValue={false}
+                />
+              </View>
+
+              {/* Notes */}
+              <View className="mb-4">
+                <TextArea
+                  label="Notes (optional)"
+                  placeholder="How are you feeling today?"
+                  value={notes}
+                  onChangeText={setNotes}
+                  rows={3}
+                />
+              </View>
+
+              {/* Actions */}
+              <View className="flex-row gap-3 mt-5">
+                <Button variant="outline" onPress={() => setIsEditing(false)} className="flex-1">
+                  Cancel
+                </Button>
+                <Button
+                  variant="default"
+                  onPress={handleSave}
+                  loading={saveMetrics.isPending}
+                  className="flex-1"
+                >
+                  Save
+                </Button>
+              </View>
+            </Card>
+          </View>
+        ) : (
+          <>
+            {/* Today's Summary */}
+            <View className="px-5 mb-6">
+              <Card className="p-5">
+                <View className="flex-row justify-between items-center mb-4">
+                  <H3 color="foreground">Today's Check-in</H3>
+                  <Button variant="outline" size="sm" onPress={handleStartLogging}>
+                    {todayMetrics ? "Update" : "Log Now"}
+                  </Button>
+                </View>
+
+                {todayMetrics ? (
+                  <View className="flex-row justify-around">
+                    <View className="items-center gap-2">
+                      <View
+                        className="w-16 h-16 rounded-full items-center justify-center"
+                        style={{ backgroundColor: `${getMoodColor(todayMetrics.moodScore || 3)}30` }}
+                      >
+                        <Text variant="h2" style={{ color: getMoodColor(todayMetrics.moodScore || 3) }}>
+                          {todayMetrics.moodScore || "-"}
+                        </Text>
+                      </View>
+                      <Text variant="caption" color="mutedForeground">
+                        Mood
+                      </Text>
+                    </View>
+                    <View className="items-center gap-2">
+                      <View
+                        className="w-16 h-16 rounded-full items-center justify-center"
+                        style={{ backgroundColor: `${colors.accent}30` }}
+                      >
+                        <Text variant="h2" color="accent">
+                          {todayMetrics.energyScore || "-"}
+                        </Text>
+                      </View>
+                      <Text variant="caption" color="mutedForeground">
+                        Energy
+                      </Text>
+                    </View>
+                    <View className="items-center gap-2">
+                      <View
+                        className="w-16 h-16 rounded-full items-center justify-center"
+                        style={{ backgroundColor: `${colors.warning}30` }}
+                      >
+                        <Text variant="h2" color="warning">
+                          {todayMetrics.stressScore || "-"}
+                        </Text>
+                      </View>
+                      <Text variant="caption" color="mutedForeground">
+                        Stress
+                      </Text>
+                    </View>
+                    <View className="items-center gap-2">
+                      <View
+                        className="w-16 h-16 rounded-full items-center justify-center"
+                        style={{ backgroundColor: `${colors.violet}30` }}
+                      >
+                        <Text variant="h2" color="violet">
+                          {todayMetrics.sleepHours || "-"}
+                        </Text>
+                      </View>
+                      <Text variant="caption" color="mutedForeground">
+                        Sleep (hrs)
+                      </Text>
+                    </View>
+                  </View>
+                ) : (
+                  <View className="items-center py-6 gap-2">
+                    <Feather name="bar-chart-2" size={48} color={colors.mutedForeground} />
+                    <Text variant="body" color="mutedForeground" align="center">
+                      No metrics logged today yet
+                    </Text>
+                  </View>
+                )}
+              </Card>
+            </View>
+
+            {/* Weekly Average */}
+            {weeklyAvg && (
+              <View className="px-5 mb-6">
+                <Card className="p-5">
+                  <H3 className="mb-4">Weekly Average</H3>
+                  <View className="flex-row justify-around">
+                    <View className="items-center">
+                      <Text variant="h3" color="accent">
+                        {weeklyAvg.avgMood?.toFixed(1) || "-"}
+                      </Text>
+                      <Text variant="caption" color="mutedForeground">
+                        Mood
+                      </Text>
+                    </View>
+                    <View className="items-center">
+                      <Text variant="h3" color="success">
+                        {weeklyAvg.avgEnergy?.toFixed(1) || "-"}
+                      </Text>
+                      <Text variant="caption" color="mutedForeground">
+                        Energy
+                      </Text>
+                    </View>
+                    <View className="items-center">
+                      <Text variant="h3" color="warning">
+                        {weeklyAvg.avgStress?.toFixed(1) || "-"}
+                      </Text>
+                      <Text variant="caption" color="mutedForeground">
+                        Stress
+                      </Text>
+                    </View>
+                    <View className="items-center">
+                      <Text variant="h3" color="violet">
+                        {weeklyAvg.avgSleepHours?.toFixed(1) || "-"}
+                      </Text>
+                      <Text variant="caption" color="mutedForeground">
+                        Sleep
+                      </Text>
+                    </View>
+                  </View>
+                </Card>
+              </View>
+            )}
+
+            {/* Level & XP Card */}
         <View className="px-5 mb-6">
           <View className="bg-primary rounded-2xl p-5">
             <View className="flex-row items-center justify-between">
@@ -219,6 +513,39 @@ export default function StatsScreen() {
             </View>
           )}
         </View>
+
+            {/* Milestones */}
+            {milestones && milestones.length > 0 && (
+              <View className="px-5 mb-6">
+                <Card className="p-5">
+                  <H3 className="mb-4">Recent Milestones</H3>
+                  <View className="gap-3">
+                    {milestones.slice(0, 5).map((milestone: any) => (
+                      <View key={milestone.id} className="flex-row items-center gap-3">
+                        <View
+                          className="w-9 h-9 rounded-full items-center justify-center"
+                          style={{ backgroundColor: `${colors.success}20` }}
+                        >
+                          <Feather name="check-circle" size={20} color={colors.success} />
+                        </View>
+                        <View className="flex-1">
+                          <Text variant="labelLarge" color="foreground">
+                            {milestone.milestoneType}
+                          </Text>
+                          {milestone.description && (
+                            <Text variant="caption" color="mutedForeground">
+                              {milestone.description}
+                            </Text>
+                          )}
+                        </View>
+                      </View>
+                    ))}
+                  </View>
+                </Card>
+              </View>
+            )}
+          </>
+        )}
 
         {/* Bottom padding */}
         <View className="h-8" />

@@ -126,9 +126,11 @@ export function useCreateJournalEntry() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (data: {
+      title?: string;
       content: string;
       entryType?: string;
       promptId?: number;
+      mood?: string;
     }) => {
       const response = await apiClient.post("/api/journal", data);
       if (!response.ok) throw new Error("Failed to create entry");
@@ -136,7 +138,47 @@ export function useCreateJournalEntry() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["journal-entries"] });
+      queryClient.invalidateQueries({ queryKey: ["journal"] });
       queryClient.invalidateQueries({ queryKey: ["gamification"] });
+    },
+  });
+}
+
+export function useUpdateJournalEntry() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: {
+      id: string;
+      title?: string;
+      content?: string;
+      mood?: string | null;
+    }) => {
+      const response = await apiClient.patch(`/api/journal/${data.id}`, {
+        title: data.title,
+        content: data.content,
+        mood: data.mood,
+      });
+      if (!response.ok) throw new Error("Failed to update entry");
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["journal-entries"] });
+      queryClient.invalidateQueries({ queryKey: ["journal"] });
+    },
+  });
+}
+
+export function useDeleteJournalEntry() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const response = await apiClient.delete(`/api/journal/${id}`);
+      if (!response.ok) throw new Error("Failed to delete entry");
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["journal-entries"] });
+      queryClient.invalidateQueries({ queryKey: ["journal"] });
     },
   });
 }
