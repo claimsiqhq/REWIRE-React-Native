@@ -2,6 +2,7 @@
   "name": "rewire-app",
   "version": "1.0.0",
   "scripts": {
+    "dev": "cd mobile && expo start",
     "mobile:start": "cd mobile && expo start",
     "mobile:android": "cd mobile && expo start --android",
     "mobile:ios": "cd mobile && expo start --ios",
