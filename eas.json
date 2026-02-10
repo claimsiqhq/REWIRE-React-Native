@@ -22,8 +22,8 @@
     },
     "preview": {
       "distribution": "internal",
-      "android": {
-        "buildType": "apk"
+      "ios": {
+        "simulator": false
       },
       "env": {
         "EXPO_PUBLIC_API_URL": "https://43330b6b-e373-4342-97b1-8664c5452751-00-oc4ejr1j8g4u.picard.replit.dev"
@@ -31,6 +31,7 @@
     },
     "production": {
       "autoIncrement": true,
+      "ios": {},
       "env": {
         "EXPO_PUBLIC_API_URL": "https://43330b6b-e373-4342-97b1-8664c5452751-00-oc4ejr1j8g4u.picard.replit.dev"
       }

@@ -6,6 +6,9 @@ module.exports = function (api) {
       "nativewind/babel",
     ],
     plugins: [
+      // Required for expo-router
+      "expo-router/babel",
+      // Required for react-native-reanimated (must be last)
       "react-native-reanimated/plugin",
     ],
   };
